@@ -4,7 +4,7 @@
 
 // Supabase Configuration - Replace with your credentials
 const SUPABASE_URL = 'https://cflphbcgbwggnsmphcry.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_I73mVkp6WGNcy0-OgTTJqw_yHljjWXQ';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmbHBoYmNnYndnZ25zbXBoY3J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxNjUwMzYsImV4cCI6MjA4Nzc0MTAzNn0.lywo0InSmf-IRi70w3XmHz2n4ZZfoBhY6nrYAdRqXCg';
 
 // Initialize Supabase client
 let supabase;
