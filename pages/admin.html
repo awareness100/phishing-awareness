@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الإدارة - فحص التصيد</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body class="bg-slate-900 text-white min-h-screen font-cairo">
+    <!-- Navigation -->
+    <nav class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="../index.html" class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">فحص التصيد</span>
+                </a>
+                <div class="flex items-center gap-4">
+                    <a href="dashboard.html" class="text-slate-300 hover:text-white transition">التقارير</a>
+                    <span id="userName" class="text-slate-300"></span>
+                    <button id="logoutBtn" class="text-red-400 hover:text-red-300 transition">تسجيل الخروج</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">لوحة الإدارة</h1>
+                <p class="text-slate-400">إدارة القياسات والأسئلة</p>
+            </div>
+            <button id="addAssessmentBtn" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 px-6 py-3 rounded-xl font-medium transition flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                قياس جديد
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 mb-6 bg-slate-800/50 rounded-xl p-1 w-fit">
+            <button id="assessmentsTab" class="px-6 py-2 rounded-lg font-medium transition bg-gradient-to-r from-cyan-500 to-blue-600 text-white">
+                القياسات
+            </button>
+            <button id="questionsTab" class="px-6 py-2 rounded-lg font-medium transition text-slate-400 hover:text-white">
+                الأسئلة
+            </button>
+        </div>
+
+        <!-- Assessments Section -->
+        <div id="assessmentsSection">
+            <div id="assessmentsList" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Assessments will be loaded here -->
+                <div class="col-span-full text-center py-12">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
+                    <p class="text-slate-400 mt-4">جاري تحميل القياسات...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions Section (Hidden by default) -->
+        <div id="questionsSection" class="hidden">
+            <div class="bg-slate-800/50 rounded-xl p-4 mb-6">
+                <label class="block text-sm text-slate-400 mb-2">اختر القياس</label>
+                <select id="assessmentSelect" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500">
+                    <option value="">اختر قياس...</option>
+                </select>
+            </div>
+
+            <div id="questionsList" class="space-y-4">
+                <!-- Questions will be loaded here -->
+                <div class="text-center py-12 text-slate-500">
+                    اختر قياساً لعرض أسئلته
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Assessment Modal -->
+    <div id="assessmentModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeAssessmentModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-slate-700 flex items-center justify-between">
+                    <h3 class="text-xl font-bold">قياس جديد</h3>
+                    <button onclick="closeAssessmentModal()" class="text-slate-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <form id="assessmentForm" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">عنوان القياس</label>
+                        <input type="text" id="assessmentTitle" required
+                            class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                            placeholder="مثال: قياس محاكاة الوعي الأمني">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">الوصف</label>
+                        <textarea id="assessmentDescription" rows="3"
+                            class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                            placeholder="وصف مختصر للقياس..."></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">السنة</label>
+                            <input type="number" id="assessmentYear" value="2025"
+                                class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">الحالة</label>
+                            <select id="assessmentStatus"
+                                class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500">
+                                <option value="draft">مسودة</option>
+                                <option value="published">منشور</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 pt-4">
+                        <button type="submit" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 py-3 rounded-xl font-medium transition">
+                            حفظ
+                        </button>
+                        <button type="button" onclick="closeAssessmentModal()" class="flex-1 border border-slate-600 hover:border-slate-500 py-3 rounded-xl font-medium transition">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Question Modal -->
+    <div id="questionModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeQuestionModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-slate-700 flex items-center justify-between">
+                    <h3 class="text-xl font-bold">إضافة سؤال</h3>
+                    <button onclick="closeQuestionModal()" class="text-slate-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <form id="questionForm" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">نص السؤال / الرسالة</label>
+                        <textarea id="questionText" rows="4" required
+                            class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                            placeholder="أدخل نص السؤال أو محتوى الرسالة هنا..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">نوع السؤال</label>
+                        <select id="questionType"
+                            class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500">
+                            <option value="phishing">رسالة تصيد</option>
+                            <option value="safe">رسالة آمنة</option>
+                            <option value="mixed">مختلط</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-medium text-slate-300">خيارات الإجابة</label>
+                            <button type="button" id="addOptionBtn" class="text-sm text-cyan-400 hover:text-cyan-300">
+                                + إضافة خيار
+                            </button>
+                        </div>
+                        <div id="optionsContainer" class="space-y-2">
+                            <!-- Options will be added here -->
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">حدد الخيار الصحيح بالضغط على الدائرة</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">توضيح الإجابة الصحيحة</label>
+                        <textarea id="correctExplanation" rows="2" required
+                            class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                            placeholder="اشرح لماذا هذه الإجابة صحيحة..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">توضيح الإجابة الخاطئة</label>
+                        <textarea id="wrongExplanation" rows="2" required
+                            class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                            placeholder="اشرح لماذا الإجابة الأخرى خاطئة..."></textarea>
+                    </div>
+
+                    <div class="flex gap-3 pt-4">
+                        <button type="submit" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 py-3 rounded-xl font-medium transition">
+                            حفظ السؤال
+                        </button>
+                        <button type="button" onclick="closeQuestionModal()" class="flex-1 border border-slate-600 hover:border-slate-500 py-3 rounded-xl font-medium transition">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-16 w-16 border-b-4 border-cyan-500 mb-4"></div>
+            <p class="text-white text-lg">جاري التحميل...</p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50"></div>
+
+    <!-- Scripts -->
+    <script src="../js/supabaseClient.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/admin.js"></script>
+</body>
+</html>

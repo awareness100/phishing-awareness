@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الاختبار - فحص التصيد</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body class="bg-slate-900 text-white min-h-screen font-cairo">
+    <!-- Navigation -->
+    <nav class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="../index.html" class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">فحص التصيد</span>
+                </a>
+                <div id="userSection" class="hidden items-center gap-4">
+                    <span id="userName" class="text-slate-300"></span>
+                    <button id="logoutBtn" class="text-red-400 hover:text-red-300 transition">تسجيل الخروج</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Test Container -->
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-20">
+            <div class="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-500"></div>
+            <p class="text-slate-400 mt-4 text-lg">جاري تحميل الاختبار...</p>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="hidden">
+            <div class="bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-700 p-8 text-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h1 id="assessmentTitle" class="text-3xl font-bold mb-4"></h1>
+                <p id="assessmentDescription" class="text-slate-400 mb-8 max-w-2xl mx-auto"></p>
+                
+                <div class="grid md:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-slate-900/50 p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-cyan-400" id="questionCount">0</div>
+                        <div class="text-sm text-slate-500">سؤال</div>
+                    </div>
+                    <div class="bg-slate-900/50 p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-blue-400">60</div>
+                        <div class="text-sm text-slate-500">ثانية للسؤال</div>
+                    </div>
+                    <div class="bg-slate-900/50 p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-purple-400">فوري</div>
+                        <div class="text-sm text-slate-500">النتيجة</div>
+                    </div>
+                </div>
+
+                <button id="startBtn" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 px-8 py-4 rounded-xl font-semibold text-lg transition shadow-lg shadow-cyan-500/25">
+                    بدء الاختبار
+                </button>
+            </div>
+        </div>
+
+        <!-- Test Screen -->
+        <div id="testScreen" class="hidden">
+            <!-- Progress Bar -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-400">السؤال <span id="currentQuestion">1</span> من <span id="totalQuestions">10</span></span>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span id="timer" class="text-xl font-mono font-bold text-cyan-400">60</span>
+                    </div>
+                </div>
+                <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div id="progressBar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Score Display -->
+            <div class="flex gap-4 mb-6">
+                <div class="flex items-center gap-2 px-4 py-2 bg-green-500/10 rounded-lg text-green-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span id="correctCount" class="font-bold">0</span>
+                </div>
+                <div class="flex items-center gap-2 px-4 py-2 bg-red-500/10 rounded-lg text-red-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    <span id="wrongCount" class="font-bold">0</span>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-700 p-6 md:p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <span class="text-slate-400">بريد إلكتروني</span>
+                </div>
+
+                <h2 id="questionText" class="text-xl md:text-2xl font-bold mb-6 leading-relaxed"></h2>
+
+                <!-- Options -->
+                <div id="optionsContainer" class="space-y-3">
+                    <!-- Options will be loaded here -->
+                </div>
+
+                <!-- Feedback -->
+                <div id="feedback" class="hidden mt-6 p-6 rounded-xl">
+                    <div class="flex items-start gap-4">
+                        <div id="feedbackIcon" class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"></div>
+                        <div>
+                            <h3 id="feedbackTitle" class="text-lg font-bold mb-2"></h3>
+                            <p id="feedbackText" class="text-slate-300"></p>
+                        </div>
+                    </div>
+                    <button id="nextBtn" class="mt-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 px-6 py-3 rounded-xl font-medium transition">
+                        السؤال التالي
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="hidden">
+            <div class="bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-700 p-8 text-center">
+                <div class="w-24 h-24 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                
+                <h2 class="text-3xl font-bold mb-2">اكتمل الاختبار!</h2>
+                <p class="text-slate-400 mb-8">لقد أنهيت القياس بنجاح</p>
+
+                <div class="grid md:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-slate-900/50 p-6 rounded-xl">
+                        <div id="finalScore" class="text-4xl font-bold text-cyan-400">0%</div>
+                        <div class="text-sm text-slate-500 mt-2">النتيجة</div>
+                    </div>
+                    <div class="bg-slate-900/50 p-6 rounded-xl">
+                        <div id="finalCorrect" class="text-4xl font-bold text-green-400">0</div>
+                        <div class="text-sm text-slate-500 mt-2">صحيح</div>
+                    </div>
+                    <div class="bg-slate-900/50 p-6 rounded-xl">
+                        <div id="finalWrong" class="text-4xl font-bold text-red-400">0</div>
+                        <div class="text-sm text-slate-500 mt-2">خاطئ</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="my-results.html" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 px-6 py-3 rounded-xl font-medium transition">
+                        عرض نتائجي
+                    </a>
+                    <a href="../index.html" class="border border-slate-600 hover:border-slate-500 px-6 py-3 rounded-xl font-medium transition">
+                        العودة للرئيسية
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Required -->
+        <div id="loginRequired" class="hidden text-center py-20">
+            <div class="w-20 h-20 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-4">يجب تسجيل الدخول</h2>
+            <p class="text-slate-400 mb-6">يرجى تسجيل الدخول لبدء الاختبار</p>
+            <a href="auth.html" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 px-6 py-3 rounded-xl font-medium transition">
+                تسجيل الدخول
+            </a>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-16 w-16 border-b-4 border-cyan-500 mb-4"></div>
+            <p class="text-white text-lg">جاري التحميل...</p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50"></div>
+
+    <!-- Scripts -->
+    <script src="../js/supabaseClient.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/test.js"></script>
+</body>
+</html>
